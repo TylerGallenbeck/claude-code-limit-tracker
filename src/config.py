@@ -144,8 +144,8 @@ class Config:
             # Yellow
             return (255, 255, 0)
         else:
-            # Red
-            return (255, 0, 0)
+            # Bright Red (more readable)
+            return (255, 100, 100)
     
     def format_time_remaining(self, seconds: float) -> str:
         """Format seconds remaining into human readable format."""
