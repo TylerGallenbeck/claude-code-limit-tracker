@@ -22,24 +22,54 @@ That's it! Your status line will now show usage information.
 
 **Pro Users:**
 ```
-📁 project | 🤖 Sonnet 4 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m
+📁 project | 🌿 main* | 🤖 Sonnet 4 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m
 ```
 
 **Max Users:**
 ```
-📁 project | 🤖 Opus 4 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
+📁 project | 🌿 feature↑2? | 🤖 Opus 4 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
 ```
 
 **Legend:**
-- 📁 Current project
+- 📁 Current project directory
+- 🌿 Git branch and status (see Git Status below)
 - 🤖 Active model (Sonnet 4 or Opus 4)
 - ⚡ 5-hour cycle prompts/limit (percentage)
 - 📅 Weekly hours/limit for each model
 - 🔄 Time until 5-hour cycle resets
 
+### Git Status Indicators
+
+The git branch display shows:
+
+**Branch Examples:**
+- `🌿 main` - Clean branch, up to date
+- `🌿 feature` - Clean branch (long names auto-truncated)
+- `🌿 (abc123)` - Detached HEAD state
+
+**Status Indicators:**
+- `*` - Modified files (uncommitted changes)
+- `?` - Untracked files present
+- `↑2` - 2 commits ahead of remote
+- `↓3` - 3 commits behind remote  
+- `↑1↓2` - Diverged (1 ahead, 2 behind)
+
+**Color Coding:**
+- 🟢 **Green** - Clean and up-to-date
+- 🟡 **Yellow** - Dirty working tree (modified/untracked files)
+- 🔵 **Blue** - Ahead of remote (commits to push)
+- 🟠 **Orange** - Behind remote (need to pull)
+- 🔴 **Red** - Git errors or conflicts
+
+**Examples:**
+- `🌿 main*` - Modified files on main branch
+- `🌿 feature↑2*?` - Feature branch: 2 commits ahead, modified files, untracked files
+- `🌿 main↓1` - Behind remote by 1 commit
+
 ## Features
 
 - **Real session time tracking** - Calculates actual conversation hours
+- **Git integration** - Shows current branch, status, and sync information
 - **Cross-project monitoring** - Tracks usage across all Claude projects
 - **Model-specific limits** - Separate weekly quotas for Sonnet 4 and Opus 4
 - **All subscription tiers** - Works with Free, Pro, Max 5x, Max 20x

@@ -49,16 +49,14 @@ def generate_status_line(override_dir=None):
     parts = []
     
     # Project name
-    project_part = f"📁 {project_name}"
+    parts.append(f"📁 {project_name}")
     
     # Add git information if enabled
     if config.show_git_info:
         git_status = git_info.get_git_status(project_path)
         git_display = git_info.format_git_info(git_status)
         if git_display:
-            project_part += f" {git_display}"
-    
-    parts.append(project_part)
+            parts.append(git_display)
     
     # Current model - try multiple detection methods
     current_model = "Sonnet 4"  # Default
