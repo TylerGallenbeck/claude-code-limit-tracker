@@ -13,7 +13,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 git clone https://github.com/TylerGallenbeck/claude-code-limit-tracker.git
 cd claude-code-limit-tracker
-python install.py
+uv run python install.py
 ```
 
 That's it! Your status line will now show usage information.
