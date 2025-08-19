@@ -11,14 +11,18 @@ import os
 from pathlib import Path
 from tracker import UsageTracker
 from config import Config
+from git_info import GitInfo
 
-def generate_status_line():
-    """Generate status line output for Claude Code."""
+def generate_status_line(override_dir=None):
+    """Generate status line output for Claude Code.
+    
+    Args:
+        override_dir: Optional directory path to use instead of cwd
+    """
     
     # Get current project name from working directory
     try:
-        # Try to read from environment variable first (set by Claude Code)
-        project_path = os.environ.get('CLAUDE_PROJECT_PATH') or os.getcwd()
+        project_path = override_dir or os.getcwd()
         project_name = Path(project_path).name
         
         # If we're in the tracker directory, use that
@@ -30,6 +34,7 @@ def generate_status_line():
     # Initialize components
     config = Config()
     tracker = UsageTracker()
+    git_info = GitInfo(cache_duration=config.git_cache_duration)
     
     # Get current usage data
     usage = tracker.update()
@@ -44,7 +49,16 @@ def generate_status_line():
     parts = []
     
     # Project name
-    parts.append(f"📁 {project_name}")
+    project_part = f"📁 {project_name}"
+    
+    # Add git information if enabled
+    if config.show_git_info:
+        git_status = git_info.get_git_status(project_path)
+        git_display = git_info.format_git_info(git_status)
+        if git_display:
+            project_part += f" {git_display}"
+    
+    parts.append(project_part)
     
     # Current model - try multiple detection methods
     current_model = "Sonnet 4"  # Default

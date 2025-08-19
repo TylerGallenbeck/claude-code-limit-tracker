@@ -6,7 +6,7 @@ Handles subscription tiers and limits.
 
 import json
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from dataclasses import dataclass
 import os
 
@@ -71,6 +71,11 @@ class Config:
         # Load or create user config
         self.tier = self._load_user_tier()
         
+        # Load git settings with defaults
+        self.show_git_info = True
+        self.git_cache_duration = 5
+        self._load_git_settings()
+        
         # Save limits for reference
         self._save_limits()
     
@@ -86,6 +91,19 @@ class Config:
         
         # Default to pro
         return 'pro'
+    
+    def _load_git_settings(self) -> None:
+        """Load git configuration settings."""
+        if self.user_config_path.exists():
+            try:
+                with open(self.user_config_path, 'r') as f:
+                    data = json.load(f)
+                    git_config = data.get('git_settings', {})
+                    
+                    self.show_git_info = git_config.get('show_git_info', True)
+                    self.git_cache_duration = git_config.get('cache_duration', 5)
+            except:
+                pass  # Use defaults if loading fails
     
     def _save_limits(self):
         """Save all tier limits to JSON for reference."""
@@ -124,7 +142,11 @@ class Config:
         # Save to config
         config_data = {
             "subscription_tier": tier,
-            "configured": True
+            "configured": True,
+            "git_settings": {
+                "show_git_info": self.show_git_info,
+                "cache_duration": self.git_cache_duration
+            }
         }
         
         with open(self.user_config_path, 'w') as f:
@@ -189,3 +211,29 @@ class Config:
             except (ValueError, KeyboardInterrupt):
                 print("\nCancelled.")
                 break
+    
+    def get_git_settings(self) -> Dict[str, Any]:
+        """Get current git configuration settings."""
+        return {
+            "show_git_info": self.show_git_info,
+            "cache_duration": self.git_cache_duration
+        }
+    
+    def update_git_settings(self, show_git_info: Optional[bool] = None, 
+                           cache_duration: Optional[int] = None) -> None:
+        """
+        Update git configuration settings.
+        
+        Args:
+            show_git_info: Whether to show git info in status line
+            cache_duration: Cache duration in seconds
+        """
+        if show_git_info is not None:
+            self.show_git_info = show_git_info
+        
+        if cache_duration is not None:
+            self.git_cache_duration = max(1, cache_duration)  # Min 1 second
+        
+        # Save updated config if we have a tier set
+        if hasattr(self, 'tier'):
+            self.set_user_tier(self.tier)

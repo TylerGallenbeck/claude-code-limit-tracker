@@ -72,10 +72,15 @@ def integrate_with_claude():
     else:
         settings = {}
     
-    # Update status line settings using uv run
+    # Update status line settings - use direct python path to preserve cwd
+    if sys.platform == "win32":
+        python_path = project_dir / ".venv" / "Scripts" / "python.exe"
+    else:
+        python_path = project_dir / ".venv" / "bin" / "python"
+    
     settings['statusLine'] = {
         'type': 'command',
-        'command': f'uv run --directory {project_dir} python status_line.py'
+        'command': f'{python_path} {project_dir}/status_line.py'
     }
     
     # Save updated settings
