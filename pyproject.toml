@@ -1,0 +1,23 @@
+[project]
+name = "claude-code-usage-tracking"
+version = "2.0.0"
+description = "Fast, accurate usage tracking for Claude Code with real session time calculation"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = []
+
+[project.scripts]
+claude-tracker = "src.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
