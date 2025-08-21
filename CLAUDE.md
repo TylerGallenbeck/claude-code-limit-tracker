@@ -107,3 +107,4 @@ This Python implementation provides significant performance improvements:
 - **Real-Time Updates**: Updates usage data in milliseconds
 - **Memory Efficient**: Processes thousands of messages without significant memory usage
 - **Cross-Platform**: Works on macOS, Linux, and Windows with Python 3.8+
+- Use uv run as a prefix in order to run files in this project

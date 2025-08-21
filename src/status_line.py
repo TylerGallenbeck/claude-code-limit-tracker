@@ -13,16 +13,12 @@ from tracker import UsageTracker
 from config import Config
 from git_info import GitInfo
 
-def generate_status_line(override_dir=None):
-    """Generate status line output for Claude Code.
-    
-    Args:
-        override_dir: Optional directory path to use instead of cwd
-    """
+def generate_status_line():
+    """Generate status line output for Claude Code."""
     
     # Get current project name from working directory
     try:
-        project_path = override_dir or os.getcwd()
+        project_path = os.getcwd()
         project_name = Path(project_path).name
         
         # If we're in the tracker directory, use that
