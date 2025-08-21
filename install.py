@@ -72,15 +72,10 @@ def integrate_with_claude():
     else:
         settings = {}
     
-    # Update status line settings - use direct python path to preserve cwd
-    if sys.platform == "win32":
-        python_path = project_dir / ".venv" / "Scripts" / "python.exe"
-    else:
-        python_path = project_dir / ".venv" / "bin" / "python"
-    
+    # Update status line settings - use uv run to ensure proper environment
     settings['statusLine'] = {
         'type': 'command',
-        'command': f'{python_path} {project_dir}/status_line.py'
+        'command': f'cd {project_dir} && uv run python status_line.py'
     }
     
     # Save updated settings
@@ -107,8 +102,8 @@ def configure_subscription():
     
     config_script = f"""
 import sys
-sys.path.insert(0, '{project_dir}')
-from claude_tracker.config import Config
+sys.path.insert(0, '{project_dir / 'src'}')
+from config import Config
 config = Config()
 config.interactive_setup()
 """
