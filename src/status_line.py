@@ -34,10 +34,6 @@ def generate_status_line():
     # Get project name
     try:
         project_name = Path(project_path).name
-
-        # If we're in the tracker directory, use that
-        if project_name == 'claude-code-usage-tracking' or project_name == 'claude-code-limit-tracker':
-            project_name = 'usage-tracker'
     except:
         project_name = 'unknown'
     

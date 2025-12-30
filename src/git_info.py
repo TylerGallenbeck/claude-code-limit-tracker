@@ -201,7 +201,7 @@ class GitInfo:
             except (ValueError, IndexError):
                 pass
     
-    def format_git_info(self, status: GitStatus, max_branch_length: int = 20) -> str:
+    def format_git_info(self, status: GitStatus, max_branch_length: int = 40) -> str:
         """
         Format git status into a compact string for status line.
         

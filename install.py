@@ -110,10 +110,17 @@ def integrate_with_claude():
     else:
         settings = {}
     
-    # Update status line settings - use uv run to ensure proper environment
+    # Update status line settings - use absolute path to Python from venv
+    # This preserves the current working directory
+    if sys.platform == "win32":
+        python_exe = project_dir / ".venv" / "Scripts" / "python.exe"
+    else:
+        python_exe = project_dir / ".venv" / "bin" / "python"
+
+    status_line_script = project_dir / 'status_line.py'
     settings['statusLine'] = {
         'type': 'command',
-        'command': f'cd {project_dir} && uv run python status_line.py'
+        'command': f'"{python_exe}" "{status_line_script}"'
     }
     
     # Save updated settings
