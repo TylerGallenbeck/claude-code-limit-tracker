@@ -65,16 +65,61 @@ def generate_status_line():
             parts.append(git_display)
     
     # Current model - try multiple detection methods
-    current_model = "Sonnet 4"  # Default
-    
-    # Method 1: Check environment variables
-    claude_model = os.environ.get('CLAUDE_MODEL', '').lower()
-    if 'opus' in claude_model:
-        current_model = "Opus 4"
-    elif 'sonnet' in claude_model:
-        current_model = "Sonnet 4"
-    else:
-        # Method 2: Read from Claude settings.json
+    current_model = "Sonnet 4.5"  # Default
+
+    # Method 1: Check Claude stats cache for most recent model
+    try:
+        stats_cache = Path.home() / ".claude" / "stats-cache.json"
+        if stats_cache.exists():
+            with open(stats_cache, 'r') as f:
+                stats = json.load(f)
+                model_usage = stats.get('modelUsage', {})
+
+                # Filter for Claude models only
+                claude_models = {
+                    'claude-sonnet-4': 'Sonnet 4',
+                    'claude-sonnet-4.5': 'Sonnet 4.5',
+                    'claude-opus-4': 'Opus 4',
+                    'claude-opus-4.1': 'Opus 4.1',
+                    'claude-opus-4.5': 'Opus 4.5',
+                }
+
+                # Find most recently used Claude model
+                for model in model_usage.keys():
+                    model_lower = model.lower()
+                    if 'sonnet' in model_lower or 'opus' in model_lower:
+                        if 'opus' in model_lower:
+                            if '4.5' in model_lower or '4_5' in model_lower:
+                                current_model = "Opus 4.5"
+                            elif '4.1' in model_lower or '4_1' in model_lower:
+                                current_model = "Opus 4.1"
+                            else:
+                                current_model = "Opus 4"
+                        elif 'sonnet' in model_lower:
+                            if '4.5' in model_lower or '4_5' in model_lower:
+                                current_model = "Sonnet 4.5"
+                            else:
+                                current_model = "Sonnet 4"
+                        break  # Use first match
+    except:
+        pass
+
+    # Method 2: Check environment variables
+    if current_model == "Sonnet 4.5":  # Still default, try env var
+        claude_model = os.environ.get('CLAUDE_MODEL', '').lower()
+        if 'opus' in claude_model:
+            if '4.5' in claude_model or '4_5' in claude_model:
+                current_model = "Opus 4.5"
+            else:
+                current_model = "Opus 4"
+        elif 'sonnet' in claude_model:
+            if '4.5' in claude_model or '4_5' in claude_model:
+                current_model = "Sonnet 4.5"
+            else:
+                current_model = "Sonnet 4"
+
+    # Method 3: Check Claude settings.json
+    if current_model == "Sonnet 4.5":  # Still default, try settings
         try:
             settings_path = Path.home() / ".claude" / "settings.json"
             if settings_path.exists():
@@ -82,15 +127,17 @@ def generate_status_line():
                     settings = json.load(f)
                     model_setting = settings.get('model', '').lower()
                     if 'opus' in model_setting:
-                        current_model = "Opus 4"
+                        if '4.5' in model_setting or '4_5' in model_setting:
+                            current_model = "Opus 4.5"
+                        else:
+                            current_model = "Opus 4"
                     elif 'sonnet' in model_setting:
-                        current_model = "Sonnet 4"
+                        if '4.5' in model_setting or '4_5' in model_setting:
+                            current_model = "Sonnet 4.5"
+                        else:
+                            current_model = "Sonnet 4"
         except:
-            # Method 3: Fallback to recent session analysis
-            if usage.sessions:
-                recent = usage.sessions[-1]
-                if recent.opus_responses > recent.sonnet_responses:
-                    current_model = "Opus 4"
+            pass
     
     parts.append(f"🤖 {current_model}")
     
