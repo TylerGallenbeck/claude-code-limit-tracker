@@ -12,6 +12,12 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
+# Fix Windows encoding issue
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 def check_dependencies():
     """Check and install required dependencies."""
     print("Checking dependencies...")
@@ -34,23 +40,55 @@ def check_dependencies():
 def setup_virtual_env():
     """Set up virtual environment and install packages."""
     print("\nSetting up Python environment...")
-    
+
+    # Skip if we're already running in a virtual environment
+    # (happens when user runs: uv run python install.py)
+    if os.environ.get('VIRTUAL_ENV'):
+        print("✓ Already running in virtual environment, skipping creation")
+        # Still try to sync dependencies
+        project_dir = Path(__file__).parent
+        print("Syncing dependencies...")
+        result = subprocess.run(
+            ['uv', 'sync'],
+            cwd=project_dir,
+            capture_output=True,
+            encoding='utf-8',
+            errors='replace'
+        )
+        if result.returncode == 0:
+            print("✓ Dependencies synced")
+            return True
+        # Non-fatal if sync fails
+        return True
+
     project_dir = Path(__file__).parent
-    
+
     # Create virtual environment using uv
     print("Creating virtual environment...")
-    result = subprocess.run(['uv', 'venv'], cwd=project_dir, capture_output=True)
+    result = subprocess.run(
+        ['uv', 'venv', '--clear'],
+        cwd=project_dir,
+        capture_output=True,
+        encoding='utf-8',
+        errors='replace'
+    )
     if result.returncode != 0:
-        print(f"❌ Failed to create virtual environment: {result.stderr.decode()}")
+        print(f"❌ Failed to create virtual environment: {result.stderr}")
         return False
-    
+
     # Install numpy using uv
     print("Installing numpy...")
-    result = subprocess.run(['uv', 'pip', 'install', 'numpy'], cwd=project_dir, capture_output=True)
+    result = subprocess.run(
+        ['uv', 'pip', 'install', 'numpy'],
+        cwd=project_dir,
+        capture_output=True,
+        encoding='utf-8',
+        errors='replace'
+    )
     if result.returncode != 0:
-        print(f"❌ Failed to install numpy: {result.stderr.decode()}")
+        print(f"❌ Failed to install numpy: {result.stderr}")
         return False
-    
+
     print("✓ Python environment configured")
     return True
 
@@ -72,10 +110,17 @@ def integrate_with_claude():
     else:
         settings = {}
     
-    # Update status line settings - use uv run to ensure proper environment
+    # Update status line settings - use absolute path to Python from venv
+    # This preserves the current working directory
+    if sys.platform == "win32":
+        python_exe = project_dir / ".venv" / "Scripts" / "python.exe"
+    else:
+        python_exe = project_dir / ".venv" / "bin" / "python"
+
+    status_line_script = project_dir / 'status_line.py'
     settings['statusLine'] = {
         'type': 'command',
-        'command': f'cd {project_dir} && uv run python status_line.py'
+        'command': f'"{python_exe}" "{status_line_script}"'
     }
     
     # Save updated settings
@@ -88,57 +133,34 @@ def integrate_with_claude():
 
 def configure_subscription():
     """Configure subscription tier."""
-    print("\nConfiguring subscription tier...")
-    
-    project_dir = Path(__file__).parent
-    config_dir = project_dir / "config"
-    config_dir.mkdir(exist_ok=True)
-    
-    # Run interactive configuration
-    if sys.platform == "win32":
-        python_cmd = project_dir / ".venv" / "Scripts" / "python.exe"
-    else:
-        python_cmd = project_dir / ".venv" / "bin" / "python"
-    
-    config_script = f"""
-import sys
-sys.path.insert(0, '{project_dir / 'src'}')
-from config import Config
-config = Config()
-config.interactive_setup()
-"""
-    
-    result = subprocess.run([str(python_cmd), '-c', config_script])
-    
-    if result.returncode == 0:
-        print("✓ Subscription tier configured")
-        return True
-    else:
-        print("❌ Configuration failed")
-        return False
+    print("\n⚠️  Skipping interactive configuration...")
+    print("    Please run: uv run python configure.py")
+    print("    to select your subscription tier.")
+    return True  # Return True to continue installation
 
 def test_installation():
     """Test the installation."""
     print("\nTesting installation...")
-    
+
     project_dir = Path(__file__).parent
-    
+
     # Determine Python executable
     if sys.platform == "win32":
         python_cmd = project_dir / ".venv" / "Scripts" / "python.exe"
     else:
         python_cmd = project_dir / ".venv" / "bin" / "python"
-    
+
     # Test status line generation
     test_input = json.dumps({"projectPath": str(project_dir)})
-    
+
     result = subprocess.run(
         [str(python_cmd), str(project_dir / 'status_line.py')],
         input=test_input,
         capture_output=True,
-        text=True
+        encoding='utf-8',
+        errors='replace'
     )
-    
+
     if result.returncode == 0 and result.stdout:
         print("✓ Status line test successful")
         print(f"Sample output: {result.stdout.strip()}")
@@ -189,8 +211,10 @@ def main():
     print("✅ Installation complete!")
     print("\nThe tracker is now integrated with Claude Code.")
     print("Your usage will be displayed in the status line.")
-    print("\nTo reconfigure your subscription tier, run:")
-    print("  python configure.py")
+    print("\n⚠️  IMPORTANT: Configure your subscription tier:")
+    print("  uv run python configure.py")
+    print("\nTo reconfigure later, run:")
+    print("  uv run python configure.py")
     print("=" * 60)
 
 if __name__ == "__main__":
