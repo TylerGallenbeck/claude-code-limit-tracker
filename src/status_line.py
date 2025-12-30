@@ -15,14 +15,28 @@ from git_info import GitInfo
 
 def generate_status_line():
     """Generate status line output for Claude Code."""
-    
-    # Get current project name from working directory
+
+    # Try to get project path from stdin JSON (provided by Claude Code)
+    project_path = None
     try:
+        if not sys.stdin.isatty():
+            stdin_data = sys.stdin.read().strip()
+            if stdin_data:
+                data = json.loads(stdin_data)
+                project_path = data.get('projectPath') or data.get('project_path')
+    except (json.JSONDecodeError, IOError):
+        pass
+
+    # Fallback to current working directory
+    if not project_path:
         project_path = os.getcwd()
+
+    # Get project name
+    try:
         project_name = Path(project_path).name
-        
+
         # If we're in the tracker directory, use that
-        if project_name == 'claude-code-usage-tracking':
+        if project_name == 'claude-code-usage-tracking' or project_name == 'claude-code-limit-tracker':
             project_name = 'usage-tracker'
     except:
         project_name = 'unknown'
