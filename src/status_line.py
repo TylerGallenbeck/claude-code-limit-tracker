@@ -16,6 +16,28 @@ from git_info import GitInfo
 def generate_status_line():
     """Generate status line output for Claude Code."""
     
+    # Read JSON input from stdin if available
+    context_window_pct = None
+    try:
+        if not sys.stdin.isatty():
+            input_data = sys.stdin.read()
+            if input_data:
+                json_data = json.loads(input_data)
+                # Try to get context window percentage
+                ctx_win = json_data.get('context_window', {})
+                context_window_pct = ctx_win.get('remaining_percentage')
+                
+                # If remaining_percentage is null, try to calculate from used_percentage
+                if context_window_pct is None:
+                    used_pct = ctx_win.get('used_percentage')
+                    if used_pct is not None:
+                        context_window_pct = 100 - used_pct
+                    else:
+                        # Default to 100% if no data available (start of session)
+                        context_window_pct = 100
+    except:
+        pass
+    
     # Get current project name from working directory
     try:
         project_path = os.getcwd()
@@ -104,6 +126,10 @@ def generate_status_line():
     
     # Time until reset
     parts.append(f"🔄 {config.format_time_remaining(time_remaining)}")
+    
+    # Context window remaining (if available)
+    if context_window_pct is not None:
+        parts.append(f"\033[93m🧠 ctx left: {context_window_pct}%\033[0m")
     
     # Output the status line
     status_line = " | ".join(parts)
