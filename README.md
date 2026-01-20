@@ -22,12 +22,12 @@ That's it! Your status line will now show usage information.
 
 **Pro Users:**
 ```
-📁 project | 🌿 main* | 🤖 Sonnet 4 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m
+📁 project | 🌿 main* | 🤖 Sonnet 4 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m | 🧠 ctx left: 75%
 ```
 
 **Max Users:**
 ```
-📁 project | 🌿 feature↑2? | 🤖 Opus 4 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
+📁 project | 🌿 feature↑2? | 🤖 Opus 4 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m | 🧠 ctx left: 82%
 ```
 
 **Legend:**
@@ -37,6 +37,7 @@ That's it! Your status line will now show usage information.
 - ⚡ 5-hour cycle prompts/limit (percentage)
 - 📅 Weekly hours/limit for each model
 - 🔄 Time until 5-hour cycle resets
+- 🧠 Context window remaining (percentage)
 
 ### Git Status Indicators
 
@@ -69,6 +70,7 @@ The git branch display shows:
 ## Features
 
 - **Real session time tracking** - Calculates actual conversation hours
+- **Context window monitoring** - Shows remaining context window percentage
 - **Git integration** - Shows current branch, status, and sync information
 - **Cross-project monitoring** - Tracks usage across all Claude projects
 - **Model-specific limits** - Separate weekly quotas for Sonnet 4 and Opus 4

@@ -23,7 +23,18 @@ def generate_status_line():
             input_data = sys.stdin.read()
             if input_data:
                 json_data = json.loads(input_data)
-                context_window_pct = json_data.get('context_window', {}).get('remaining_percentage')
+                # Try to get context window percentage
+                ctx_win = json_data.get('context_window', {})
+                context_window_pct = ctx_win.get('remaining_percentage')
+                
+                # If remaining_percentage is null, try to calculate from used_percentage
+                if context_window_pct is None:
+                    used_pct = ctx_win.get('used_percentage')
+                    if used_pct is not None:
+                        context_window_pct = 100 - used_pct
+                    else:
+                        # Default to 100% if no data available (start of session)
+                        context_window_pct = 100
     except:
         pass
     
