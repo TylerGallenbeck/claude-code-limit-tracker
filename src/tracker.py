@@ -145,16 +145,24 @@ class UsageTracker:
         except:
             pass
         
-        # Calculate session duration
+        # Calculate session duration using active time (gap-based)
+        # Only count time between messages that are ≤30 minutes apart
         duration_hours = 0.0
         start_time = 0.0
         end_time = 0.0
-        
+        MAX_GAP_SECONDS = 30 * 60  # 30 minutes
+
         if timestamps:
-            timestamps = np.array(timestamps)
-            start_time = float(timestamps.min())
-            end_time = float(timestamps.max())
-            duration_hours = (end_time - start_time) / 3600
+            ts_array = np.array(sorted(timestamps))
+            start_time = float(ts_array[0])
+            end_time = float(ts_array[-1])
+
+            if len(ts_array) > 1:
+                gaps = np.diff(ts_array)
+                # Only count gaps that are within the active threshold
+                active_gaps = gaps[gaps <= MAX_GAP_SECONDS]
+                duration_hours = float(active_gaps.sum()) / 3600
+            # Single-message sessions count as 0 hours
         
         session = SessionData(
             session_id=jsonl_path.stem,
