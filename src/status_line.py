@@ -15,12 +15,22 @@ from git_info import GitInfo
 
 def generate_status_line():
     """Generate status line output for Claude Code."""
-    
-    # Get current project name from working directory
+
+    # Read JSON input from stdin (Claude Code sends session data)
+    stdin_data = {}
     try:
-        project_path = os.getcwd()
+        if not sys.stdin.isatty():
+            input_text = sys.stdin.read()
+            if input_text:
+                stdin_data = json.loads(input_text)
+    except:
+        pass
+
+    # Get current project name from stdin or working directory
+    try:
+        project_path = stdin_data.get('workspace', {}).get('current_dir') or os.getcwd()
         project_name = Path(project_path).name
-        
+
         # If we're in the tracker directory, use that
         if project_name == 'claude-code-usage-tracking':
             project_name = 'usage-tracker'
@@ -54,35 +64,40 @@ def generate_status_line():
         if git_display:
             parts.append(git_display)
     
-    # Current model - try multiple detection methods
-    current_model = "Sonnet 4"  # Default
-    
-    # Method 1: Check environment variables
-    claude_model = os.environ.get('CLAUDE_MODEL', '').lower()
-    if 'opus' in claude_model:
-        current_model = "Opus 4"
-    elif 'sonnet' in claude_model:
-        current_model = "Sonnet 4"
-    else:
-        # Method 2: Read from Claude settings.json
-        try:
-            settings_path = Path.home() / ".claude" / "settings.json"
-            if settings_path.exists():
-                with open(settings_path, 'r') as f:
-                    settings = json.load(f)
-                    model_setting = settings.get('model', '').lower()
-                    if 'opus' in model_setting:
-                        current_model = "Opus 4"
-                    elif 'sonnet' in model_setting:
-                        current_model = "Sonnet 4"
-        except:
-            # Method 3: Fallback to recent session analysis
-            if usage.sessions:
-                recent = usage.sessions[-1]
-                if recent.opus_responses > recent.sonnet_responses:
-                    current_model = "Opus 4"
-    
-    parts.append(f"🤖 {current_model}")
+    # Current model - prefer stdin data from Claude Code (authoritative)
+    current_model = None
+    stdin_model = stdin_data.get('model', {})
+    if stdin_model:
+        current_model = stdin_model.get('display_name')
+
+    # Fallback chain if stdin didn't provide model
+    if not current_model:
+        model_id = (stdin_model.get('id') or '').lower() if stdin_model else ''
+        claude_model = os.environ.get('CLAUDE_MODEL', '').lower()
+        combined = model_id + ' ' + claude_model
+        if 'opus' in combined:
+            current_model = "Opus 4"
+        elif 'sonnet' in combined:
+            current_model = "Sonnet 4"
+        elif 'haiku' in combined:
+            current_model = "Haiku"
+        else:
+            # Last resort: check settings.json
+            try:
+                settings_path = Path.home() / ".claude" / "settings.json"
+                if settings_path.exists():
+                    with open(settings_path, 'r') as f:
+                        settings = json.load(f)
+                        model_setting = settings.get('model', '').lower()
+                        if 'opus' in model_setting:
+                            current_model = "Opus 4"
+                        elif 'sonnet' in model_setting:
+                            current_model = "Sonnet 4"
+            except:
+                pass
+
+    if current_model:
+        parts.append(f"🤖 {current_model}")
     
     # 5-hour cycle usage
     color = config.get_usage_color(usage.current_5h_prompts, limits.cycle_5h_max)
