@@ -22,18 +22,18 @@ That's it! Your status line will now show usage information.
 
 **Pro Users:**
 ```
-📁 project | 🌿 main* | 🤖 Sonnet 4 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m
+📁 project | 🌿 main* | 🤖 Sonnet 4.6 | ⚡15/40p (37%) | 📅 12.5h/80h | 🔄 2h15m
 ```
 
 **Max Users:**
 ```
-📁 project | 🌿 feature↑2? | 🤖 Opus 4 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
+📁 project | 🌿 feature↑2? | 🤖 Opus 4.7 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
 ```
 
 **Legend:**
 - 📁 Current project directory
 - 🌿 Git branch and status (see Git Status below)
-- 🤖 Active model (Sonnet 4 or Opus 4)
+- 🤖 Active model with minor version (e.g. Opus 4.7, Sonnet 4.6, Haiku 4.5) — sourced from Claude Code's status line stdin, with fallbacks to `CLAUDE_MODEL`, `~/.claude/settings.json`, then recent session data
 - ⚡ 5-hour cycle prompts/limit (percentage)
 - 📅 Weekly hours/limit for each model
 - 🔄 Time until 5-hour cycle resets

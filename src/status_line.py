@@ -13,9 +13,39 @@ from tracker import UsageTracker
 from config import Config
 from git_info import GitInfo
 
+
+def _format_model_label(model_id):
+    """Turn 'claude-opus-4-7' into 'Opus 4.7'; return None on failure."""
+    if not isinstance(model_id, str) or not model_id:
+        return None
+    cleaned = model_id.lower().strip()
+    if "[" in cleaned:
+        cleaned = cleaned.split("[", 1)[0]
+    if cleaned.startswith("claude-"):
+        cleaned = cleaned[len("claude-"):]
+    families = {"opus": "Opus", "sonnet": "Sonnet", "haiku": "Haiku"}
+    family_key = next((k for k in families if k in cleaned), None)
+    if not family_key:
+        return None
+    tail = cleaned.split(family_key, 1)[1]
+    digits = [seg for seg in tail.split("-") if seg.isdigit()]
+    if len(digits) < 2:
+        return None
+    return f"{families[family_key]} {digits[0]}.{digits[1]}"
+
+
 def generate_status_line():
     """Generate status line output for Claude Code."""
-    
+
+    stdin_payload = {}
+    if not sys.stdin.isatty():
+        try:
+            raw = sys.stdin.read()
+            if raw.strip():
+                stdin_payload = json.loads(raw)
+        except (json.JSONDecodeError, OSError, ValueError):
+            stdin_payload = {}
+
     # Get current project name from working directory
     try:
         project_path = os.getcwd()
@@ -54,34 +84,35 @@ def generate_status_line():
         if git_display:
             parts.append(git_display)
     
-    # Current model - try multiple detection methods
-    current_model = "Sonnet 4"  # Default
-    
-    # Method 1: Check environment variables
-    claude_model = os.environ.get('CLAUDE_MODEL', '').lower()
-    if 'opus' in claude_model:
-        current_model = "Opus 4"
-    elif 'sonnet' in claude_model:
-        current_model = "Sonnet 4"
-    else:
-        # Method 2: Read from Claude settings.json
+    current_model = None
+
+    stdin_model = stdin_payload.get('model')
+    if isinstance(stdin_model, dict):
+        current_model = _format_model_label(stdin_model.get('id'))
+
+    if not current_model:
+        current_model = _format_model_label(os.environ.get('CLAUDE_MODEL'))
+
+    if not current_model:
         try:
             settings_path = Path.home() / ".claude" / "settings.json"
             if settings_path.exists():
                 with open(settings_path, 'r') as f:
                     settings = json.load(f)
-                    model_setting = settings.get('model', '').lower()
-                    if 'opus' in model_setting:
-                        current_model = "Opus 4"
-                    elif 'sonnet' in model_setting:
-                        current_model = "Sonnet 4"
-        except:
-            # Method 3: Fallback to recent session analysis
-            if usage.sessions:
-                recent = usage.sessions[-1]
-                if recent.opus_responses > recent.sonnet_responses:
-                    current_model = "Opus 4"
-    
+                    current_model = _format_model_label(settings.get('model'))
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    if not current_model and usage.sessions:
+        recent = usage.sessions[-1]
+        if recent.opus_responses > recent.sonnet_responses:
+            current_model = "Opus 4"
+        elif recent.sonnet_responses > 0:
+            current_model = "Sonnet 4"
+
+    if not current_model:
+        current_model = "Sonnet 4"
+
     parts.append(f"🤖 {current_model}")
     
     # 5-hour cycle usage
