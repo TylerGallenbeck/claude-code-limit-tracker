@@ -24,6 +24,7 @@ class SessionData:
     sonnet_responses: int
     opus_responses: int
     project: str
+    last_model_id: str = ""
 
 @dataclass
 class UsageData:
@@ -83,7 +84,7 @@ class UsageTracker:
             clean_ts = ts.split('.')[0] + 'Z' if '.' in ts else ts
             dt = datetime.fromisoformat(clean_ts.replace('Z', '+00:00'))
             return dt.timestamp()
-        except:
+        except (ValueError, TypeError, AttributeError):
             return None
     
     def _is_command_message(self, content) -> bool:
@@ -110,39 +111,43 @@ class UsageTracker:
         prompts = 0
         sonnet_responses = 0
         opus_responses = 0
-        
+        last_model_id = ""
+
         try:
             with open(jsonl_path, 'r') as f:
                 for line in f:
                     try:
                         msg = json.loads(line)
-                        
+
                         # Collect timestamp
                         if ts := msg.get('timestamp'):
                             if epoch := self._parse_timestamp(ts):
                                 timestamps.append(epoch)
-                        
+
                         # Count user prompts (excluding commands and meta messages)
-                        if (msg.get('type') == 'user' and 
+                        if (msg.get('type') == 'user' and
                             msg.get('message', {}).get('role') == 'user' and
                             not msg.get('isMeta', False) and
                             msg.get('userType') == 'external'):  # Only external user messages
-                            
+
                             content = msg.get('message', {}).get('content', '')
                             # Skip empty content and command messages
                             if content and not self._is_command_message(content):
                                 prompts += 1
-                        
+
                         # Count model responses
                         elif msg.get('type') == 'assistant':
-                            model = msg.get('message', {}).get('model', '').lower()
+                            raw_model = msg.get('message', {}).get('model', '')
+                            if isinstance(raw_model, str) and raw_model.startswith('claude-'):
+                                last_model_id = raw_model
+                            model = raw_model.lower() if isinstance(raw_model, str) else ''
                             if 'opus' in model:
                                 opus_responses += 1
                             elif 'sonnet' in model:
                                 sonnet_responses += 1
-                    except:
+                    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
                         continue
-        except:
+        except OSError:
             pass
         
         # Calculate session duration
@@ -164,7 +169,8 @@ class UsageTracker:
             prompt_count=prompts,
             sonnet_responses=sonnet_responses,
             opus_responses=opus_responses,
-            project=jsonl_path.parent.name
+            project=jsonl_path.parent.name,
+            last_model_id=last_model_id,
         )
         
         # Update cache
@@ -233,7 +239,6 @@ class UsageTracker:
             "current_5h_cycle": {
                 "start_time": int(usage_data.current_5h_start * 1000),
                 "total_prompts": usage_data.current_5h_prompts,
-                "total_hours": round(usage_data.current_5h_prompts / 10, 2)  # Legacy field
             },
             "current_week": {
                 "start_time": int(usage_data.weekly_start * 1000),

@@ -104,11 +104,13 @@ def generate_status_line():
             pass
 
     if not current_model and usage.sessions:
-        recent = usage.sessions[-1]
-        if recent.opus_responses > recent.sonnet_responses:
-            current_model = "Opus 4"
-        elif recent.sonnet_responses > 0:
-            current_model = "Sonnet 4"
+        recent = max(usage.sessions, key=lambda s: s.end_time)
+        current_model = _format_model_label(recent.last_model_id)
+        if not current_model:
+            if recent.opus_responses > recent.sonnet_responses:
+                current_model = "Opus 4"
+            elif recent.sonnet_responses > 0:
+                current_model = "Sonnet 4"
 
     if not current_model:
         current_model = "Sonnet 4"
