@@ -27,7 +27,7 @@ That's it! Your status line will now show usage information.
 
 **Max Users:**
 ```
-📁 project | 🌿 feature↑2? | 🤖 Opus 4.7 | ⚡15/200p (7%) | 📅 S4: 2.7h/280h | O4: 13.2h/35h | 🔄 2h15m
+📁 project | 🌿 feature↑2? | 🤖 Opus 4.7 | ⚡15/200p (7%) | 📅 Sonnet: 2.7h/280h | Opus: 13.2h/35h | 🔄 2h15m
 ```
 
 **Legend:**

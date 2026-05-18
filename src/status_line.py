@@ -126,8 +126,8 @@ def generate_status_line():
         sonnet_color = config.get_usage_color(usage.weekly_sonnet_hours, limits.weekly_sonnet_max)
         opus_color = config.get_usage_color(usage.weekly_opus_hours, limits.weekly_opus_max or 0)
         
-        parts.append(f"\033[38;2;{sonnet_color[0]};{sonnet_color[1]};{sonnet_color[2]}m📅 S4: {usage.weekly_sonnet_hours:.1f}h/{limits.weekly_sonnet_max}h\033[0m")
-        parts.append(f"\033[38;2;{opus_color[0]};{opus_color[1]};{opus_color[2]}mO4: {usage.weekly_opus_hours:.1f}h/{limits.weekly_opus_max or 0}h\033[0m")
+        parts.append(f"\033[38;2;{sonnet_color[0]};{sonnet_color[1]};{sonnet_color[2]}m📅 Sonnet: {usage.weekly_sonnet_hours:.1f}h/{limits.weekly_sonnet_max}h\033[0m")
+        parts.append(f"\033[38;2;{opus_color[0]};{opus_color[1]};{opus_color[2]}mOpus: {usage.weekly_opus_hours:.1f}h/{limits.weekly_opus_max or 0}h\033[0m")
     else:
         # Free/Pro - Sonnet only
         color = config.get_usage_color(usage.weekly_sonnet_hours, limits.weekly_sonnet_max)
